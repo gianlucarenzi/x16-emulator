@@ -11,14 +11,29 @@ It is the X16 port of RMTPLAY of
 PBI: here only the VERA screen and the VERA PSG are left.
 
 ```sh
-make                        # build/RMTPLAY.PRG with music/gemx.rmt
-make run                    # x16emu -scale 2 -prg build/RMTPLAY.PRG -run
-make SONG=path/song.rmt     # any RMT4 (4 channels) or RMT8 (8) module
-make SONG=path/song.sap     # a SAP / XEX exported by RITMO or RMT 1.31+
-make SONG=x.sap SUBSONG=1   #   another subtune of it
-make NAME="..." AUTHOR="..." DATE="..."   # instead of the text in the file
+make                        # the three demo songs: build/GEMX.PRG,
+                            # build/MONO.PRG, build/STEREO.PRG
+make run-gemx               # x16emu -scale 2 -prg build/GEMX.PRG -run
+make run-mono               #   (run-stereo, ...)
+make one SONG=path/song.rmt # any RMT4 (4 channels) or RMT8 (8) module:
+                            # build/SONG.PRG (PRGNAME=x: build/X.PRG)
+make one SONG=path/song.sap # a SAP / XEX exported by RITMO or RMT 1.31+
+make one SONG=x.sap SUBSONG=1   # another subtune of it
+make one SONG=... NAME="..." AUTHOR="..." DATE="..."   # instead of the text in the file
 make MHZ=4                  # the CPU clock the player timer is set for (8)
+make run PRGNAME=x [SONG=...]   # build/X.PRG in x16emu
 ```
+
+The demo songs (`music/`):
+
+| PRG | song | |
+|---|---|---|
+| `GEMX.PRG` | `gemx.rmt` | "gem'x song", Atari version by Raster / C.P.U., 2004: RMT4, instrument speed 1 |
+| `MONO.PRG` | `mono_reference_song.rmt` | the mono reference song of RMT / RITMO: RMT4, instrument speed 4 (the player 4 times a frame) |
+| `STEREO.PRG` | `stereo_reference_song.rmt` | the stereo reference song: RMT8 (two POKEYs, 8 PSG voices), instrument speed 4; it starts in stereo (channels 1-4 left, 5-8 right) |
+
+The player is built for the track count of the song (4 or 8), so each song
+is a PRG of its own.
 
 Keys: SPACE pause / play, R restart, S stereo on/off, Q (ESC, RUN/STOP)
 exit.  Needs cc65 and python3.
@@ -62,5 +77,5 @@ exit.  Needs cc65 and python3.
   cells that change are written; psgrmt.s saves and restores the VERA port
   registers, so the IRQ can come in the middle of a screen write.
 
-`music/gemx.rmt`: "gem'x song", Atari version by Raster / C.P.U., 2004,
-from the songs of Raster Music Tracker.
+The songs come with Raster Music Tracker / RITMO (`rmt/songs/rmt128` of
+RITMO: `others/mono_reference_song.rmt`, `others/stereo_reference_song.rmt`).

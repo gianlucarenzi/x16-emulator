@@ -1,13 +1,18 @@
 # Makefile - RMTPLAY for the Commander X16: an RMT song on the VERA PSG with
 # a visualizer (see README.md)
 #
-#   make                       build/RMTPLAY.PRG with music/gemx.rmt
-#   make SONG=path/song.rmt    any RMT4 / RMT8 module
+#   make                       the three demo songs: build/GEMX.PRG
+#                              (music/gemx.rmt), build/MONO.PRG and
+#                              build/STEREO.PRG (the RMT4 and RMT8 reference
+#                              songs of RITMO)
+#   make run-gemx | run-mono | run-stereo   start one in x16emu
+#   make one SONG=path/song.rmt [PRGNAME=x]   any RMT4 / RMT8 module:
+#                              build/X.PRG (default: the file name)
 #   make SONG=path/song.sap    a SAP or XEX exported by RITMO / RMT (LZSS
 #                              streams, lzsplayr.s; SUBSONG=n: another subtune)
 #   make NAME=.. AUTHOR=.. DATE=..   song info instead of the text in the file
 #   make MHZ=4                 the CPU clock the player timer is set for (8)
-#   make run                   start it in x16emu (X16EMU=..., X16ROM=...: -rom)
+#   make run [PRGNAME=x]       start build/X.PRG in x16emu (X16EMU=..., X16ROM=...: -rom)
 #   make clean
 #
 # Needs cc65 (cl65) and python3.
@@ -19,14 +24,19 @@ X16ROM  ?=
 X16OPTS ?= -scale 2
 
 SONG    ?= music/gemx.rmt
+PRGNAME ?= $(basename $(notdir $(SONG)))
 SUBSONG ?= 0
 NAME    ?=
 AUTHOR  ?=
 DATE    ?=
 MHZ     ?= 8
 
-B   = build
-PRG = $(B)/RMTPLAY.PRG
+# the demo songs: PRG name, file
+DEMOS   = gemx:music/gemx.rmt mono:music/mono_reference_song.rmt \
+          stereo:music/stereo_reference_song.rmt
+
+B   = build/$(PRGNAME)
+PRG = build/$(shell echo '$(PRGNAME)' | tr a-z A-Z).PRG
 
 # a .sap or .xex exported by RITMO / RMT: the VU-Player LZSS streams
 ifneq ($(filter .sap .SAP .xex .XEX,$(suffix $(SONG))),)
@@ -42,7 +52,14 @@ ASM     = $(PLAYER) src/psgrmt.s src/rmtx16.s
 DEFS    = --asm-define RMT_SHADOW --asm-define RMT_VERA --asm-define CPU_HZ=$(MHZ)000000 \
           --asm-define RMT_TRACKS=$(TRACKS) -DRMT_TRACKS=$(TRACKS) $(if $(LZSS),-DRMT_LZSS)
 
-all: $(PRG)
+all:
+	@set -e; for d in $(DEMOS); do \
+	    $(MAKE) --no-print-directory one PRGNAME=$${d%%:*} SONG=$${d#*:}; done
+
+one: $(PRG)
+
+$(foreach d,$(DEMOS),$(eval run-$(firstword $(subst :, ,$(d))): ; \
+    $$(MAKE) --no-print-directory run PRGNAME=$(firstword $(subst :, ,$(d))) SONG=$(lastword $(subst :, ,$(d)))))
 
 # the song and its info are kept in a stamp file: changing them rebuilds
 $(B)/song.cfg: FORCE
@@ -74,10 +91,10 @@ $(PRG): src/rmtplay.c src/rmt.h $(ASM) src/rmt_feat.inc src/vera.inc src/rmtplay
 	$(CL65) -t cx16 -Osir -C src/rmtplay.cfg -I src -I $(B) --asm-include-dir src $(DEFS) \
 		-m $(B)/rmtplay.map -o $@ src/rmtplay.c $(ASM) $(B)/psgtab.s $(B)/song.s
 
-run: $(PRG)
+run: one
 	$(X16EMU) $(if $(X16ROM),-rom $(X16ROM)) $(X16OPTS) -prg $(PRG) -run
 
 clean:
-	rm -rf $(B)
+	rm -rf build
 
-.PHONY: all run clean FORCE
+.PHONY: all one run clean FORCE $(foreach d,$(DEMOS),run-$(firstword $(subst :, ,$(d))))

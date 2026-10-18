@@ -696,6 +696,9 @@ int main(void)
 
     psg_init();
     psg_enable = 1;
+#if RMT_TRACKS > 4
+    psg_stereo = 1;         /* an RMT8 song: two POKEYs, left and right */
+#endif
     rmt_init(rmt_song);
     rmt_irq_on();
 
