@@ -21,6 +21,7 @@ make one SONG=path/song.sap # a SAP / XEX exported by RITMO or RMT 1.31+
 make one SONG=x.sap SUBSONG=1   # another subtune of it
 make one SONG=... NAME="..." AUTHOR="..." DATE="..."   # instead of the text in the file
 make MHZ=4                  # the CPU clock the player timer is set for (8)
+make CPU_HZ=1773447         # the same in Hz (x16emu -mhz 1.773447)
 make run PRGNAME=x [SONG=...]   # build/X.PRG in x16emu
 ```
 
@@ -70,7 +71,9 @@ exit.  Needs cc65 and python3.
   free running at 300 Hz: a song frame every 6 ticks at 50 Hz, every 5 at
   60 Hz.  The handler is on the KERNAL IRQ vector ($0314): a timer IRQ ends
   there, a VSYNC goes on to the KERNAL (keyboard, clock).  The KERNAL uses
-  Timer 1 only as an entropy source, the serial bus uses Timer 2.
+  Timer 1 only as an entropy source, the serial bus uses Timer 2.  The timer
+  is set for the CPU clock of the build (`MHZ`, `CPU_HZ`): above 19.6 MHz the
+  tick goes to 600, 900 ... Hz so that its period fits the 16 bit counter.
 - `src/rmtplay.c` draws the screen: layer 1 in 40x30 text with the X16
   upper / lower case character set and the bar glyphs, map at $00000 (the
   KERNAL screen at $1B000 is left alone and comes back on exit).  Only the

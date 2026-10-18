@@ -14,7 +14,8 @@
 ; vibrato, songs converted frame by frame) then plays with a 17 ms jolt
 ; every 6 frames.  So the player runs from Timer 1 of VIA1, free running at
 ; 300 Hz: a song frame every 6 ticks at 50 Hz, every 5 at 60 Hz, exactly.
-; The latch is CPU_HZ / 300 - 2 cycles (-D CPU_HZ=..., 8 MHz by default).
+; The latch is CPU_HZ / 300 - 2 cycles (-D CPU_HZ=..., 8 MHz by default);
+; above 19.6 MHz the tick goes to 600, 900 ... Hz to fit the 16 bit timer.
 ; The KERNAL uses Timer 1 only as an entropy source (it reads the counter),
 ; the serial bus uses Timer 2.
 ;
@@ -56,8 +57,11 @@ VIA1_IER    = $9F0E
 .ifndef CPU_HZ
 CPU_HZ      = 8000000
 .endif
-TICK_HZ     = 300                       ; a multiple of 50 and of 60
+; the tick: the smallest multiple of 300 (so of 50 and of 60) whose period
+; fits the 16 bit counter: 300 Hz at 8 MHz, 900 Hz at 40 MHz
+TICK_HZ     = 300 * ((CPU_HZ / 300 + 65536) / 65537)
 T1_LATCH    = CPU_HZ / TICK_HZ - 2      ; free running period: latch + 2
+.assert T1_LATCH < 65536, error, "VIA1 Timer 1 latch out of range"
 
         .segment "DATA"
 
@@ -161,7 +165,7 @@ irq:
         bvc @kernal
         lda VIA1_T1CL                   ; acknowledge
         clc                             ; acc += rate: a song frame each
-        lda acc                         ; time it reaches 300
+        lda acc                         ; time it reaches TICK_HZ
         adc _rmt_rate
         sta acc
         bcc @c

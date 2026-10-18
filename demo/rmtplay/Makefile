@@ -12,6 +12,7 @@
 #                              streams, lzsplayr.s; SUBSONG=n: another subtune)
 #   make NAME=.. AUTHOR=.. DATE=..   song info instead of the text in the file
 #   make MHZ=4                 the CPU clock the player timer is set for (8)
+#   make CPU_HZ=1773447        the same in Hz (here the clock of a PAL Atari)
 #   make run [PRGNAME=x]       start build/X.PRG in x16emu (X16EMU=..., X16ROM=...: -rom)
 #   make clean
 #
@@ -30,6 +31,7 @@ NAME    ?=
 AUTHOR  ?=
 DATE    ?=
 MHZ     ?= 8
+CPU_HZ  ?= $(MHZ)000000
 
 # the demo songs: PRG name, file
 DEMOS   = gemx:music/gemx.rmt mono:music/mono_reference_song.rmt \
@@ -49,7 +51,7 @@ TRACKS := $(shell $(PYTHON) -c "d=open('$(SONG)','rb').read(10); print(8 if d[6:
 endif
 
 ASM     = $(PLAYER) src/psgrmt.s src/rmtx16.s
-DEFS    = --asm-define RMT_SHADOW --asm-define RMT_VERA --asm-define CPU_HZ=$(MHZ)000000 \
+DEFS    = --asm-define RMT_SHADOW --asm-define RMT_VERA --asm-define CPU_HZ=$(CPU_HZ) \
           --asm-define RMT_TRACKS=$(TRACKS) -DRMT_TRACKS=$(TRACKS) $(if $(LZSS),-DRMT_LZSS)
 
 all:
@@ -64,8 +66,8 @@ $(foreach d,$(DEMOS),$(eval run-$(firstword $(subst :, ,$(d))): ; \
 # the song and its info are kept in a stamp file: changing them rebuilds
 $(B)/song.cfg: FORCE
 	@mkdir -p $(B)
-	@printf '%s\n' '$(SONG)|$(SUBSONG)|$(TRACKS)|$(NAME)|$(AUTHOR)|$(DATE)|$(MHZ)' | cmp -s - $@ || \
-		printf '%s\n' '$(SONG)|$(SUBSONG)|$(TRACKS)|$(NAME)|$(AUTHOR)|$(DATE)|$(MHZ)' > $@
+	@printf '%s\n' '$(SONG)|$(SUBSONG)|$(TRACKS)|$(NAME)|$(AUTHOR)|$(DATE)|$(CPU_HZ)' | cmp -s - $@ || \
+		printf '%s\n' '$(SONG)|$(SUBSONG)|$(TRACKS)|$(NAME)|$(AUTHOR)|$(DATE)|$(CPU_HZ)' > $@
 
 $(B)/song.s: $(SONG) tools/rmt2ca65.py tools/sap2ca65.py $(B)/song.cfg
 ifdef LZSS
