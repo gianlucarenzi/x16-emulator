@@ -93,11 +93,11 @@ rtc_step(int c)
 	}
 
 	clocks += c;
-	if (clocks < (MHZ * 1000000)) {
+	if (clocks < cpu_hz) {
 		return;
 	}
 
-	clocks -= (MHZ * 1000000);
+	clocks -= cpu_hz;
 	seconds++;
 	if (seconds < 60) {
 		return;

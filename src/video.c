@@ -2119,7 +2119,7 @@ void video_write(uint8_t reg, uint8_t value) {
 			}
 
 			if (enable_midline)
-				video_step(MHZ, 0, true); // potential midline raster effect
+				video_step(MHZ_F, 0, true); // potential midline raster effect
 			bool nibble = fx_nibble_bit[reg - 3];
 			uint32_t address = get_and_inc_address(reg - 3, true);
 			if (log_video) {
@@ -2217,7 +2217,7 @@ void video_write(uint8_t reg, uint8_t value) {
 		case 0x0A:
 		case 0x0B:
 		case 0x0C: {
-			video_step(MHZ, 0, true); // potential midline raster effect
+			video_step(MHZ_F, 0, true); // potential midline raster effect
 			int i = reg - 0x09 + (io_dcsel << 2);
 			if (i == 0) {
 				// if progressive mode field goes from 0 to 1
@@ -2344,7 +2344,7 @@ void video_write(uint8_t reg, uint8_t value) {
 		case 0x11:
 		case 0x12:
 		case 0x13:
-			video_step(MHZ, 0, true); // potential midline raster effect
+			video_step(MHZ_F, 0, true); // potential midline raster effect
 			reg_layer[0][reg - 0x0D] = value;
 			refresh_layer_properties(0);
 			break;
@@ -2356,7 +2356,7 @@ void video_write(uint8_t reg, uint8_t value) {
 		case 0x18:
 		case 0x19:
 		case 0x1A:
-			video_step(MHZ, 0, true); // potential midline raster effect
+			video_step(MHZ_F, 0, true); // potential midline raster effect
 			reg_layer[1][reg - 0x14] = value;
 			refresh_layer_properties(1);
 			break;

@@ -24,7 +24,7 @@ vera_spi_init()
 }
 
 void
-vera_spi_step(int mhz, int clocks)
+vera_spi_step(float mhz, int clocks)
 {
 	if (busy) {
 		outcounter += (float)clocks * SPI_CLOCK_RATE_MHZ / (float)mhz;

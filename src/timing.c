@@ -34,7 +34,7 @@ timing_update()
 	cpu_ticks += clockticks6502 - clockticks6502_old;
 	clockticks6502_old = clockticks6502;
 	uint32_t sdlTicks = SDL_GetTicks() - sdlTicks_base;
-	int64_t diff_time = cpu_ticks / MHZ - sdlTicks * 1000LL;
+	int64_t diff_time = cpu_ticks * 1000000LL / cpu_hz - sdlTicks * 1000LL;
 	if (!warp_mode && diff_time > 0) {
 		if (diff_time >= 1000000) {
 			sleep(diff_time / 1000000);
@@ -44,7 +44,7 @@ timing_update()
 	}
 
 	if (sdlTicks - last_perf_update > 5000) {
-		uint32_t perf = (cpu_ticks - last_perf_cpu_ticks) / (MHZ * 50000);
+		uint32_t perf = (cpu_ticks - last_perf_cpu_ticks) / (cpu_hz / 20);
 
 		if (perf < 100 || warp_mode) {
 			sprintf(window_title, WINDOW_TITLE " (%d%%)%s", perf, mouse_grabbed ? MOUSE_GRAB_MSG : "");

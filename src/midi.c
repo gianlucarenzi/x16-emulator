@@ -842,7 +842,7 @@ uint8_t midi_serial_read(uint8_t reg, bool debugOn)
 
 void midi_serial_calculate_clk(uint8_t sel)
 {
-    double uart_clks_per_cpu = (MIDI_UART_OSC_RATE_MHZ / MIDI_UART_PRIMARY_DIVIDER) / MHZ;
+    double uart_clks_per_cpu = (MIDI_UART_OSC_RATE_MHZ / MIDI_UART_PRIMARY_DIVIDER) / MHZ_F;
     if (mregs[sel].dl > 0) {
         uart_clks_per_cpu /= mregs[sel].dl;
         mregs[sel].clockdec = uart_clks_per_cpu * 0x1000000L; // convert to 8.24 fixed point

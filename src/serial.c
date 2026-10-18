@@ -7,6 +7,9 @@
 // it helped bringing up the serial bus on real
 // hardware.
 
+/* microseconds -> CPU clocks */
+#define US(n) ((uint32_t)((uint64_t)(n) * cpu_hz / 1000000))
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -60,8 +63,8 @@ serial_step(int clocks)
 		old_clk == serial_port_read_clk() &&
 		old_data == serial_port_read_data()) {
 		clocks_since_last_change += clocks;
-		if (state == 2 && valid == true && bit == 0 && clocks_since_last_change > 200 * MHZ) {
-			if (clocks_since_last_change < (200 + 60) * MHZ) {
+		if (state == 2 && valid == true && bit == 0 && clocks_since_last_change > US(200)) {
+			if (clocks_since_last_change < US((200 + 60))) {
 				printf("XXX EOI ACK\n");
 				serial_port.out.data = 0;
 				eoi = true;
@@ -72,7 +75,7 @@ serial_step(int clocks)
 			}
 			print = true;
 		}
-		if (state == 10 && clocks_since_last_change > 60 * MHZ) {
+		if (state == 10 && clocks_since_last_change > US(60)) {
 			serial_port.out.clk = 1;
 			state = 11;
 			clocks_since_last_change = 0;
@@ -91,14 +94,14 @@ serial_step(int clocks)
 				state = 13;
 			}
 			print = true;
-		} else if (state == 12 && clocks_since_last_change > 512 * MHZ) {
+		} else if (state == 12 && clocks_since_last_change > US(512)) {
 			// EOI delay
 			// XXX we'd have to check for the ACK
 			clocks_since_last_change = 0;
 			serial_port.out.clk = 0;
 			state = 13;
 			print = true;
-		} else if (state == 13 && clocks_since_last_change > 60 * MHZ) {
+		} else if (state == 13 && clocks_since_last_change > US(60)) {
 			if (valid) {
 				// send bit
 				serial_port.out.data = (byte >> bit) & 1;
@@ -114,7 +117,7 @@ serial_step(int clocks)
 			valid = !valid;
 			clocks_since_last_change = 0;
 			print = true;
-		} else if (state == 14 && clocks_since_last_change > 60 * MHZ) {
+		} else if (state == 14 && clocks_since_last_change > US(60)) {
 			serial_port.out.data = 1;
 			serial_port.out.clk = 0;
 			state = 10;

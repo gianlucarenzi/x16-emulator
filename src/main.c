@@ -138,7 +138,8 @@ uint16_t midi_card_addr;
 
 bool using_hostfs = true;
 
-uint8_t MHZ = 8;
+uint32_t cpu_hz = 8000000;
+float MHZ_F = 8.0f;
 
 #ifdef TRACE
 bool trace_mode = false;
@@ -516,9 +517,10 @@ usage()
 	printf("\tInstall the second VIA chip expansion at $9F10\n");
 	printf("-testbench\n");
 	printf("\tHeadless mode for unit testing with an external test runner\n");
-	printf("-mhz <integer>\n");
+	printf("-mhz <number>\n");
 	printf("\tRun the emulator with a system clock speed other than the default of\n");
-	printf("\t8 MHz. Valid values are in the range of 1-40, inclusive. This option\n");
+	printf("\t8 MHz. Valid values are in the range of 0.5-40, fractions included\n");
+	printf("\t(1.773447 = Atari PAL, 0.985248 = C64 PAL). This option\n");
 	printf("\tis meant mainly for benchmarking, and may not reflect accurate\n");
 	printf("\thardware behavior.\n");
 	printf("-midline-effects\n");
@@ -1111,9 +1113,14 @@ main(int argc, char **argv)
 			if (!argc || argv[0][0] == '-') {
 				usage();
 			}
-			MHZ = (uint8_t)strtol(argv[0], NULL, 10);
-			if (MHZ < 1 || MHZ > 40) {
-				usage();
+			{
+				double mhz = strtod(argv[0], NULL);
+
+				if (mhz < 0.5 || mhz > 40) {
+					usage();
+				}
+				cpu_hz = (uint32_t)(mhz * 1000000.0 + 0.5);
+				MHZ_F = (float)(cpu_hz / 1000000.0);
 			}
 			argc--;
 			argv++;
@@ -1558,7 +1565,7 @@ handle_ieee_intercept()
 		// Add the number CPU cycles equivalent to the amount of time that the operation actually took
 		// to prevent the emu from warping after a hostfs load
 		uint64_t perf_diff = SDL_GetPerformanceCounter() - base_ticks;
-		uint32_t missed_ticks = (uint64_t)(perf_diff * 1000000ULL * MHZ) / SDL_GetPerformanceFrequency();
+		uint32_t missed_ticks = (uint64_t)(perf_diff * cpu_hz) / SDL_GetPerformanceFrequency();
 		clockticks6502 += missed_ticks;
 		if (s >= 0) {
 			if (!set_kernal_status(s)) {
@@ -1718,7 +1725,7 @@ emulator_loop(void *param)
 		old_clockticks6502 = clockticks6502;
 		bool new_frame = false;
 		via1_step(clocks);
-		vera_spi_step(MHZ, clocks);
+		vera_spi_step(MHZ_F, clocks);
 		if (has_serial) {
 			serial_step(clocks);
 		}
@@ -1726,7 +1733,7 @@ emulator_loop(void *param)
 			via2_step(clocks);
 		}
 		if (!headless) {
-			new_frame |= video_step(MHZ, clocks, false);
+			new_frame |= video_step(MHZ_F, clocks, false);
 		}
 
 		for (uint32_t i = 0; i < clocks; i++) {

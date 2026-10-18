@@ -104,7 +104,10 @@ extern uint8_t activity_led;
 extern bool nvram_dirty;
 extern uint8_t nvram[0x40];
 
-extern uint8_t MHZ;
+/* CPU clock: cpu_hz in Hz (-mhz, also fractional, e.g. 1.773447 for an
+ * Atari PAL or 0.985248 for a C64 PAL), MHZ_F the same in MHz */
+extern uint32_t cpu_hz;
+extern float MHZ_F;
 
 extern bool mouse_grabbed;
 extern bool no_keyboard_capture;
